@@ -1,244 +1,112 @@
+<div align="center">
+<img src="assets/hero.svg" width="100%"/>
+</div>
+
 # agent-plugin
 
-> Production plugin system for extending LLM agents — pure Python stdlib, zero dependencies.
+**Plugin system for extending agents for LLM agents. Zero external dependencies.**
 
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
+[![PyPI](https://img.shields.io/pypi/v/agent-plugin?color=blue)](https://pypi.org/project/agent-plugin/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Zero deps](https://img.shields.io/badge/dependencies-zero-brightgreen)](pyproject.toml)
 
 ---
 
-## Why agent-plugin?
+## The Problem
 
-Production LLM agents need to be extensible **without modifying core code**.
-`agent-plugin` gives you:
+Production LLM agents fail silently. Without plugin system for extending agents, you get undefined behaviour at scale — race conditions, lost state, cascading failures, and no way to debug what went wrong.
 
-| Component | What it does |
-|-----------|-------------|
-| `Plugin` | Base class — define name, version, and lifecycle hooks |
-| `PluginRegistry` | Register, load, unload, and query plugins by name |
-| `HookSystem` | Before/after hooks for any named function point |
-| `PluginLoader` | Discover and import plugins dynamically from a directory |
-
-No third-party dependencies. Pure stdlib (`importlib`, `abc`, `inspect`, `functools`).
-
----
+`agent-plugin` gives you a production-ready plugin system for extending agents primitive with a clean API, tested edge cases, and zero configuration.
 
 ## Installation
 
 ```bash
-pip install agent-plugin          # once published to PyPI
-# or from source:
-pip install -e /path/to/agent-plugin
+pip install agent-plugin
 ```
 
----
+Or from source:
+
+```bash
+git clone https://github.com/darshjme/agent-plugin.git
+cd agent-plugin
+pip install -e .
+```
 
 ## Quick Start
 
-### 1. Define a plugin
-
 ```python
-# my_plugins/weather_plugin.py
-from agent_plugin import Plugin
+from agent_plugin import *  # see API reference below
 
-class WeatherPlugin(Plugin):
-    name = "weather"
-    version = "1.0.0"
-
-    def on_load(self, context: dict) -> None:
-        self.api_key = context.get("weather_api_key", "")
-        print(f"WeatherPlugin loaded (key={'set' if self.api_key else 'missing'})")
-
-    def on_unload(self) -> None:
-        print("WeatherPlugin unloaded")
-
-    def get_forecast(self, city: str) -> str:
-        # Real implementation would call a weather API here
-        return f"Sunny in {city} (key={self.api_key[:4]}…)"
+# See examples/ directory for complete working examples
 ```
-
-### 2. Register and load it
-
-```python
-from agent_plugin import PluginRegistry
-
-registry = PluginRegistry()
-registry.register(WeatherPlugin())
-registry.load("weather", context={"weather_api_key": "abc123"})
-
-# Use it
-plugin = registry.get("weather")
-print(plugin.get_forecast("Mumbai"))   # Sunny in Mumbai (key=abc1…)
-
-print(registry.list_loaded())          # ["weather"]
-
-registry.unload("weather")
-print(registry.list_loaded())          # []
-```
-
-### 3. Discover plugins from a directory
-
-```python
-from agent_plugin import PluginLoader, PluginRegistry
-
-loader = PluginLoader("./my_plugins")
-files  = loader.discover()          # finds all .py files with Plugin subclasses
-
-registry = PluginRegistry()
-for path in files:
-    plugin = loader.load_from_file(path)
-    registry.register(plugin)
-
-registry.load_all(context={"weather_api_key": "abc123"})
-print(registry.list_loaded())       # ["weather", …]
-```
-
-### 4. Add before/after hooks to agent functions
-
-```python
-from agent_plugin import HookSystem
-
-hooks = HookSystem()
-
-# Log every LLM call
-hooks.register_before("llm.call", lambda prompt, **kw: print(f"→ LLM: {prompt[:50]}"))
-hooks.register_after("llm.call",  lambda result, *a, **kw: print(f"← {result[:50]}"))
-
-@hooks.wrap("llm.call")
-def call_llm(prompt: str) -> str:
-    # Real implementation calls your LLM provider
-    return f"Response to: {prompt}"
-
-call_llm("What is the capital of France?")
-# → LLM: What is the capital of France?
-# ← Response to: What is the capital of France?
-```
-
----
-
-## Extending an Agent — Full Example
-
-```python
-"""
-Demonstrates adding tool plugins to a minimal LLM agent at runtime,
-without changing any core agent code.
-"""
-
-from agent_plugin import Plugin, PluginRegistry, HookSystem
-
-# --- Core agent (never modified) -----------------------------------------
-
-class Agent:
-    def __init__(self):
-        self.registry = PluginRegistry()
-        self.hooks    = HookSystem()
-
-    def use_plugin(self, name: str):
-        plugin = self.registry.get(name)
-        if plugin is None or not plugin.is_active:
-            raise RuntimeError(f"Plugin {name!r} is not loaded")
-        return plugin
-
-    @property
-    def respond(self):
-        return self.hooks.wrap("agent.respond", self._respond)
-
-    def _respond(self, message: str) -> str:
-        return f"[Agent] {message}"
-
-# --- Two custom plugins ---------------------------------------------------
-
-class MemoryPlugin(Plugin):
-    name = "memory"
-
-    def on_load(self, context):
-        self._store = {}
-
-    def remember(self, key, value):
-        self._store[key] = value
-
-    def recall(self, key):
-        return self._store.get(key)
-
-
-class LoggingPlugin(Plugin):
-    name = "logging"
-
-    def on_load(self, context):
-        self.log = []
-
-    def on_unload(self):
-        print(f"LoggingPlugin: captured {len(self.log)} entries")
-
-# --- Wire them together ---------------------------------------------------
-
-agent = Agent()
-agent.registry.register(MemoryPlugin())
-agent.registry.register(LoggingPlugin())
-agent.registry.load_all()
-
-# Hook the logger into every agent response
-logger = agent.registry.get("logging")
-agent.hooks.register_after(
-    "agent.respond",
-    lambda result, msg: logger.log.append({"input": msg, "output": result})
-)
-
-# Use memory plugin
-mem = agent.use_plugin("memory")
-mem.remember("user_name", "Darshan")
-
-response = agent.respond("Hello!")
-print(response)                         # [Agent] Hello!
-print(f"Remembered: {mem.recall('user_name')}")  # Remembered: Darshan
-print(f"Log entries: {len(logger.log)}")         # Log entries: 1
-
-agent.registry.unload_all()
-```
-
----
 
 ## API Reference
 
-### `Plugin`
-| Attribute / Method | Type | Description |
-|--------------------|------|-------------|
-| `name` | `ClassVar[str]` | Unique plugin identifier (required) |
-| `version` | `str` | Semver string, default `"0.1.0"` |
-| `is_active` | `bool` (property) | `True` after load, `False` after unload |
-| `on_load(context)` | `-> None` | Override for init work |
-| `on_unload()` | `-> None` | Override for teardown |
+The main classes and functions are defined in `agent_plugin/__init__.py`.
 
-### `PluginRegistry`
-| Method | Description |
-|--------|-------------|
-| `register(plugin)` | Register without loading |
-| `load(name, context?)` | Load and call `on_load` |
-| `unload(name)` | Call `on_unload` and deactivate |
-| `load_all(context?)` | Load all registered plugins |
-| `unload_all()` | Unload all active plugins |
-| `get(name)` | Return plugin or `None` |
-| `list_registered()` | All registered names |
-| `list_loaded()` | All active names |
+Key exports: `Plugin base · PluginRegistry · HookSystem · PluginLoader`
 
-### `HookSystem`
-| Method | Description |
-|--------|-------------|
-| `register_before(name, func)` | Add a before-hook |
-| `register_after(name, func)` | Add an after-hook |
-| `trigger(name, *args, **kwargs)` | Fire before-hooks, return `(args, kwargs)` |
-| `trigger_after(name, result, *args, **kwargs)` | Fire after-hooks, return `result` |
-| `wrap(name, func)` | Return auto-hooked callable |
-| `clear(name?)` | Remove hooks (all if `None`) |
+All classes follow a consistent interface:
+- Instantiate with sensible defaults
+- Compose with other arsenal libraries
+- Zero external dependencies required
 
-### `PluginLoader`
-| Method | Description |
-|--------|-------------|
-| `discover()` | Scan directory, return file paths with Plugin subclasses |
-| `load_from_file(path)` | Import file and return first `Plugin` instance |
+See the source code and `tests/` directory for verified usage examples.
+
+## How It Works
+
+```mermaid
+flowchart LR
+    A[Agent Task] --> B[agent-plugin]
+    B --> C{Decision}
+    C -->|success| D[✅ Result]
+    C -->|failure| E[⚠️ Handle]
+    E --> B
+
+    style B fill:#161b22,stroke:#3fb950,stroke-width:2,color:#3fb950
+    style D fill:#1a3320,stroke:#238636,color:#3fb950
+    style E fill:#3d1a1a,stroke:#f85149,color:#f85149
+```
+
+```mermaid
+sequenceDiagram
+    participant Agent
+    participant AgentPlugin as agent-plugin
+    participant Output
+
+    Agent->>AgentPlugin: initialize()
+    AgentPlugin-->>Agent: ready
+
+    loop Agent Run
+        Agent->>AgentPlugin: process(input)
+        AgentPlugin-->>Agent: result
+    end
+
+    Agent->>Output: deliver(result)
+```
+
+## Philosophy
+
+The Vedic tradition grew through commentaries — each adding capability without changing the core. agent-plugin is that extensibility.
 
 ---
 
-## License
+## Part of the Arsenal
 
-MIT — see [LICENSE](LICENSE).
+`agent-plugin` is one of six production libraries for LLM agents:
+
+| Library | Purpose |
+|---------|---------|
+| [herald](https://github.com/darshjme/herald) | Semantic task routing |
+| [engram](https://github.com/darshjme/engram) | Agent memory |
+| [sentinel](https://github.com/darshjme/sentinel) | ReAct loop guards |
+| [verdict](https://github.com/darshjme/verdict) | Agent evaluation |
+| [agent-guardrails](https://github.com/darshjme/agent-guardrails) | Output validation |
+| [agent-observability](https://github.com/darshjme/agent-observability) | Tracing & metrics |
+
+→ [arsenal](https://github.com/darshjme/arsenal) — the complete stack
+
+---
+
+*Built by [Darshankumar Joshi](https://github.com/darshjme), Gujarat, India.*

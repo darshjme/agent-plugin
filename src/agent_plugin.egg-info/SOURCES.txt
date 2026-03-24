@@ -1,0 +1,15 @@
+README.md
+pyproject.toml
+src/agent_plugin/__init__.py
+src/agent_plugin/hooks.py
+src/agent_plugin/loader.py
+src/agent_plugin/plugin.py
+src/agent_plugin/registry.py
+src/agent_plugin.egg-info/PKG-INFO
+src/agent_plugin.egg-info/SOURCES.txt
+src/agent_plugin.egg-info/dependency_links.txt
+src/agent_plugin.egg-info/top_level.txt
+tests/test_hooks.py
+tests/test_loader.py
+tests/test_plugin.py
+tests/test_registry.py

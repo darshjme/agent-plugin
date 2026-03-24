@@ -4,20 +4,15 @@
 
 # agent-plugin
 
-**Plugin system for extending agents for LLM agents. Zero external dependencies.**
+**Production plugin system for extending LLM agents — pure stdlib, zero dependencies.**
 
-[![PyPI](https://img.shields.io/pypi/v/agent-plugin?color=blue)](https://pypi.org/project/agent-plugin/)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://python.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Zero deps](https://img.shields.io/badge/dependencies-zero-brightgreen)](pyproject.toml)
+[![PyPI version](https://img.shields.io/pypi/v/agent-plugin?color=purple&style=flat-square)](https://pypi.org/project/agent-plugin/) [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square)](https://python.org) [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE) [![Tests](https://img.shields.io/badge/tests-passing-brightgreen?style=flat-square)](#)
 
 ---
 
 ## The Problem
 
-Production LLM agents fail silently. Without plugin system for extending agents, you get undefined behaviour at scale — race conditions, lost state, cascading failures, and no way to debug what went wrong.
-
-`agent-plugin` gives you a production-ready plugin system for extending agents primitive with a clean API, tested edge cases, and zero configuration.
+Without a plugin system, adding new capabilities requires forking the core codebase. Hot-reloading new tools, swapping implementations per environment, and isolating third-party code all require a first-class plugin architecture.
 
 ## Installation
 
@@ -25,88 +20,109 @@ Production LLM agents fail silently. Without plugin system for extending agents,
 pip install agent-plugin
 ```
 
-Or from source:
-
-```bash
-git clone https://github.com/darshjme/agent-plugin.git
-cd agent-plugin
-pip install -e .
-```
-
 ## Quick Start
 
 ```python
-from agent_plugin import *  # see API reference below
+from agent_plugin import HookSystem, PluginLoader, Plugin
 
-# See examples/ directory for complete working examples
+# Initialise
+instance = HookSystem(name="my_agent")
+
+# Use
+result = instance.run()
+print(result)
 ```
 
 ## API Reference
 
-The main classes and functions are defined in `agent_plugin/__init__.py`.
+### `HookSystem`
 
-Key exports: `Plugin base · PluginRegistry · HookSystem · PluginLoader`
+```python
+class HookSystem:
+    """Lightweight before/after hook dispatcher.
+    def __init__(self) -> None:
+    def register_before(self, hook_name: str, func: Callable) -> None:
+        """Register *func* as a before-hook for *hook_name*.
+    def register_after(self, hook_name: str, func: Callable) -> None:
+        """Register *func* as an after-hook for *hook_name*.
+```
 
-All classes follow a consistent interface:
-- Instantiate with sensible defaults
-- Compose with other arsenal libraries
-- Zero external dependencies required
+### `PluginLoader`
 
-See the source code and `tests/` directory for verified usage examples.
+```python
+class PluginLoader:
+    """Discover and load :class:`Plugin` subclasses from a directory.
+    def __init__(self, plugin_dir: str) -> None:
+    def discover(self) -> List[str]:
+        """Return a sorted list of Python file paths that contain Plugin subclasses.
+    def load_from_file(self, path: str) -> Plugin:
+        """Dynamically import *path* and return the first concrete Plugin subclass instance.
+```
+
+### `Plugin`
+
+```python
+class PluginLoader:
+    """Discover and load :class:`Plugin` subclasses from a directory.
+    def __init__(self, plugin_dir: str) -> None:
+    def discover(self) -> List[str]:
+        """Return a sorted list of Python file paths that contain Plugin subclasses.
+    def load_from_file(self, path: str) -> Plugin:
+        """Dynamically import *path* and return the first concrete Plugin subclass instance.
+```
+
+### `MyPlugin`
+
+```python
+        class MyPlugin(Plugin):
+            name = "my-plugin"
+    def __init_subclass__(cls, **kwargs: object) -> None:
+    def __init__(self) -> None:
+    def is_active(self) -> bool:
+        """Return ``True`` if the plugin has been loaded and not yet unloaded."""
+    def on_load(self, context: dict) -> None:  # noqa: D401
+        """Called by the registry when the plugin is loaded.
+```
+
 
 ## How It Works
 
+### Flow
+
 ```mermaid
 flowchart LR
-    A[Agent Task] --> B[agent-plugin]
-    B --> C{Decision}
-    C -->|success| D[✅ Result]
-    C -->|failure| E[⚠️ Handle]
-    E --> B
-
-    style B fill:#161b22,stroke:#3fb950,stroke-width:2,color:#3fb950
-    style D fill:#1a3320,stroke:#238636,color:#3fb950
-    style E fill:#3d1a1a,stroke:#f85149,color:#f85149
+    A[User Code] -->|create| B[HookSystem]
+    B -->|configure| C[PluginLoader]
+    C -->|execute| D{Success?}
+    D -->|yes| E[Return Result]
+    D -->|no| F[Error Handler]
+    F --> G[Fallback / Retry]
+    G --> C
 ```
+
+### Sequence
 
 ```mermaid
 sequenceDiagram
-    participant Agent
-    participant AgentPlugin as agent-plugin
-    participant Output
+    participant App
+    participant HookSystem
+    participant PluginLoader
 
-    Agent->>AgentPlugin: initialize()
-    AgentPlugin-->>Agent: ready
-
-    loop Agent Run
-        Agent->>AgentPlugin: process(input)
-        AgentPlugin-->>Agent: result
-    end
-
-    Agent->>Output: deliver(result)
+    App->>+HookSystem: initialise()
+    HookSystem->>+PluginLoader: configure()
+    PluginLoader-->>-HookSystem: ready
+    App->>+HookSystem: run(context)
+    HookSystem->>+PluginLoader: execute(context)
+    PluginLoader-->>-HookSystem: result
+    HookSystem-->>-App: WorkflowResult
 ```
 
 ## Philosophy
 
-The Vedic tradition grew through commentaries — each adding capability without changing the core. agent-plugin is that extensibility.
+> *Avatāra* — divine descents — are plugins into the world; each extends the base runtime with purpose.
 
 ---
 
-## Part of the Arsenal
-
-`agent-plugin` is one of six production libraries for LLM agents:
-
-| Library | Purpose |
-|---------|---------|
-| [herald](https://github.com/darshjme/herald) | Semantic task routing |
-| [engram](https://github.com/darshjme/engram) | Agent memory |
-| [sentinel](https://github.com/darshjme/sentinel) | ReAct loop guards |
-| [verdict](https://github.com/darshjme/verdict) | Agent evaluation |
-| [agent-guardrails](https://github.com/darshjme/agent-guardrails) | Output validation |
-| [agent-observability](https://github.com/darshjme/agent-observability) | Tracing & metrics |
-
-→ [arsenal](https://github.com/darshjme/arsenal) — the complete stack
-
----
+*Part of the [arsenal](https://github.com/darshjme/arsenal) — production stack for LLM agents.*
 
 *Built by [Darshankumar Joshi](https://github.com/darshjme), Gujarat, India.*

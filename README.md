@@ -1,18 +1,32 @@
 <div align="center">
-<img src="assets/hero.svg" width="100%"/>
+
+<img src="assets/agent-plugin-hero.png" alt="agent-plugin — Vedic Arsenal" width="100%" />
+
+# 🌊 agent-plugin
+
+### *ब्रह्म* — Brahma — the universal intelligence
+
+**Plugin system for extending LLM agents — Plugin base class, PluginRegistry, HookSystem, PluginLoader. Zero dependencies.**
+
+[![Python](https://img.shields.io/badge/Python-3.8%2B-blue?style=flat-square&logo=python)](https://python.org)
+[![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-brightgreen?style=flat-square)](https://github.com/darshjme/agent-plugin)
+[![Tests](https://img.shields.io/badge/Tests-Passing-success?style=flat-square)](https://github.com/darshjme/agent-plugin/actions)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+[![Vedic Arsenal](https://img.shields.io/badge/Vedic%20Arsenal-100%20libs-purple?style=flat-square)](https://github.com/darshjme/arsenal)
+
+*Part of the [**Vedic Arsenal**](https://github.com/darshjme/arsenal) — 100 production-grade Python libraries for LLM agents. Zero dependencies. Battle-tested.*
+
 </div>
-
-# agent-plugin
-
-**Production plugin system for extending LLM agents — pure stdlib, zero dependencies.**
-
-[![PyPI version](https://img.shields.io/pypi/v/agent-plugin?color=purple&style=flat-square)](https://pypi.org/project/agent-plugin/) [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue?style=flat-square)](https://python.org) [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE) [![Tests](https://img.shields.io/badge/tests-passing-brightgreen?style=flat-square)](#)
 
 ---
 
-## The Problem
+## Overview
 
-Without a plugin system, adding new capabilities requires forking the core codebase. Hot-reloading new tools, swapping implementations per environment, and isolating third-party code all require a first-class plugin architecture.
+`agent-plugin` implements **plugin system for extending llm agents — plugin base class, pluginregistry, hooksystem, pluginloader. zero dependencies.**
+
+Inspired by the Vedic principle of *ब्रह्म* (Brahma), this library brings the ancient wisdom of structured discipline to modern LLM agent engineering.
+
+No external dependencies. Pure Python 3.8+. Drop it in anywhere.
 
 ## Installation
 
@@ -20,109 +34,67 @@ Without a plugin system, adding new capabilities requires forking the core codeb
 pip install agent-plugin
 ```
 
+Or clone directly:
+```bash
+git clone https://github.com/darshjme/agent-plugin.git
+cd agent-plugin
+pip install -e .
+```
+
 ## Quick Start
 
 ```python
-from agent_plugin import HookSystem, PluginLoader, Plugin
+from plugin import *
 
-# Initialise
-instance = HookSystem(name="my_agent")
-
-# Use
-result = instance.run()
-print(result)
+# Initialize
+# See examples/ for full usage patterns
 ```
 
-## API Reference
+## Why `agent-plugin`?
 
-### `HookSystem`
+Production LLM systems fail in predictable ways. `agent-plugin` solves the **plugin** failure mode with:
 
-```python
-class HookSystem:
-    """Lightweight before/after hook dispatcher.
-    def __init__(self) -> None:
-    def register_before(self, hook_name: str, func: Callable) -> None:
-        """Register *func* as a before-hook for *hook_name*.
-    def register_after(self, hook_name: str, func: Callable) -> None:
-        """Register *func* as an after-hook for *hook_name*.
+- **Zero dependencies** — no version conflicts, no bloat
+- **Battle-tested patterns** — extracted from real production systems
+- **Type-safe** — full type hints, mypy-compatible
+- **Minimal surface area** — one job, done well
+- **Composable** — works with any LLM framework (LangChain, LlamaIndex, raw OpenAI, etc.)
+
+## The Vedic Arsenal
+
+`agent-plugin` is part of **[darshjme/arsenal](https://github.com/darshjme/arsenal)** — a collection of 100 focused Python libraries for LLM agent infrastructure.
+
+Each library solves exactly one problem. Together they form a complete stack.
+
+```
+pip install agent-plugin  # this library
+# Browse all 100: https://github.com/darshjme/arsenal
 ```
 
-### `PluginLoader`
+## Contributing
 
-```python
-class PluginLoader:
-    """Discover and load :class:`Plugin` subclasses from a directory.
-    def __init__(self, plugin_dir: str) -> None:
-    def discover(self) -> List[str]:
-        """Return a sorted list of Python file paths that contain Plugin subclasses.
-    def load_from_file(self, path: str) -> Plugin:
-        """Dynamically import *path* and return the first concrete Plugin subclass instance.
-```
+Found a bug? Have an improvement?
 
-### `Plugin`
+1. Fork the repo
+2. Create a feature branch (`git checkout -b fix/your-fix`)
+3. Add tests
+4. Open a PR
 
-```python
-class PluginLoader:
-    """Discover and load :class:`Plugin` subclasses from a directory.
-    def __init__(self, plugin_dir: str) -> None:
-    def discover(self) -> List[str]:
-        """Return a sorted list of Python file paths that contain Plugin subclasses.
-    def load_from_file(self, path: str) -> Plugin:
-        """Dynamically import *path* and return the first concrete Plugin subclass instance.
-```
+All contributions welcome. Keep it zero-dependency.
 
-### `MyPlugin`
+## License
 
-```python
-        class MyPlugin(Plugin):
-            name = "my-plugin"
-    def __init_subclass__(cls, **kwargs: object) -> None:
-    def __init__(self) -> None:
-    def is_active(self) -> bool:
-        """Return ``True`` if the plugin has been loaded and not yet unloaded."""
-    def on_load(self, context: dict) -> None:  # noqa: D401
-        """Called by the registry when the plugin is loaded.
-```
-
-
-## How It Works
-
-### Flow
-
-```mermaid
-flowchart LR
-    A[User Code] -->|create| B[HookSystem]
-    B -->|configure| C[PluginLoader]
-    C -->|execute| D{Success?}
-    D -->|yes| E[Return Result]
-    D -->|no| F[Error Handler]
-    F --> G[Fallback / Retry]
-    G --> C
-```
-
-### Sequence
-
-```mermaid
-sequenceDiagram
-    participant App
-    participant HookSystem
-    participant PluginLoader
-
-    App->>+HookSystem: initialise()
-    HookSystem->>+PluginLoader: configure()
-    PluginLoader-->>-HookSystem: ready
-    App->>+HookSystem: run(context)
-    HookSystem->>+PluginLoader: execute(context)
-    PluginLoader-->>-HookSystem: result
-    HookSystem-->>-App: WorkflowResult
-```
-
-## Philosophy
-
-> *Avatāra* — divine descents — are plugins into the world; each extends the base runtime with purpose.
+MIT — use freely, build freely.
 
 ---
 
-*Part of the [arsenal](https://github.com/darshjme/arsenal) — production stack for LLM agents.*
+<div align="center">
 
-*Built by [Darshankumar Joshi](https://github.com/darshjme), Gujarat, India.*
+**Built with 🌊 by [Darshankumar Joshi](https://github.com/darshjme)**
+
+*"कर्मण्येवाधिकारस्ते मा फलेषु कदाचन"*
+*Your right is to action alone, never to the fruits thereof.*
+
+[Arsenal](https://github.com/darshjme/arsenal) · [GitHub](https://github.com/darshjme) · [Twitter](https://twitter.com/thedarshanjoshi)
+
+</div>

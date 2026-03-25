@@ -1,115 +1,103 @@
 <div align="center">
 
-<img src="assets/agent-plugin-hero.png" alt="agent-plugin — Vedic Arsenal by Darshankumar Joshi" width="100%" />
+<img src="assets/yoga-hero.png" alt="योग — yoga by Darshankumar Joshi" width="100%" />
 
-# 🌊 agent-plugin
+# ⚡ योग
+## `yoga`
 
-<h3><em>ब्रह्म</em></h3>
+> *Bhagavad Gita — four Yogas*
 
-> *Brahma — the universal intelligence*
+### Union — the joining of components
 
-**Plugin system for extending LLM agents — Plugin base class, PluginRegistry, HookSystem, PluginLoader. Zero dependencies.**
+**Plugin system for LLM agents. Dynamic loading, hot-reload, sandboxed plugins.**
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue?style=flat-square&logo=python)](https://python.org)
-[![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-brightgreen?style=flat-square)](https://github.com/darshjme/agent-plugin)
-[![Tests](https://img.shields.io/badge/Tests-Passing-success?style=flat-square)](https://github.com/darshjme/agent-plugin/actions)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
-[![Vedic Arsenal](https://img.shields.io/badge/Vedic%20Arsenal-100%20libs-purple?style=flat-square)](https://github.com/darshjme/arsenal)
+[![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-brightgreen?style=flat-square)](https://github.com/darshjme/yoga)
+[![Vedic Arsenal](https://img.shields.io/badge/Vedic%20Arsenal-100%20libs-yellow?style=flat-square)](https://github.com/darshjme/arsenal)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 
-*Part of the [**Vedic Arsenal**](https://github.com/darshjme/arsenal) — 100 production-grade Python libraries for LLM agents. Zero dependencies. Battle-tested.*
+*Formerly `agent-plugin` — Part of the [**Vedic Arsenal**](https://github.com/darshjme/arsenal): 100 production-grade Python libraries for LLM agents, each named from the Vedas, Puranas, and Mahakavyas.*
 
 </div>
 
 ---
 
-## Overview
+## The Vedic Principle
 
-`agent-plugin` implements **plugin system for extending llm agents — plugin base class, pluginregistry, hooksystem, pluginloader. zero dependencies.**
+The ancient *Yoga* principle from Bhagavad Gita — four Yogas finds its modern expression in this library.
 
-Inspired by the Vedic principle of *ब्रह्म* (Brahma), this library brings the ancient wisdom of structured discipline to modern LLM agent engineering.
+Just as the Vedic sages understood that every phenomenon in the universe follows deep patterns — patterns of creation, maintenance, and dissolution — `yoga` applies this wisdom to LLM agent engineering.
 
-No external dependencies. Pure Python 3.8+. Drop it in anywhere.
+The concept of *योग* (Union — the joining of components) speaks directly to the technical problem this library solves. When the sages codified this principle in Bhagavad Gita — four Yogas, they were describing not just a spiritual truth but a computational truth that would take humanity millennia to rediscover in silicon.
 
-## Installation
+This is not coincidence. The universe has one nature. The Vedas described it first.
 
-```bash
-pip install agent-plugin
-```
-
-Or clone directly:
-```bash
-git clone https://github.com/darshjme/agent-plugin.git
-cd agent-plugin
-pip install -e .
-```
+---
 
 ## How It Works
 
 ```mermaid
 flowchart LR
-    A[Input] --> B[agent-plugin]
+    A[Input] --> B[yoga]
     B --> C{Process}
     C -- Success --> D[Output]
-    C -- Error --> E[Handle / Retry]
+    C -- Error --> E[Handle]
     E --> B
     style B fill:#6b21a8,color:#fff
-    note["Plugin — Zero Dependencies"]
+```
+
+---
+
+## Installation
+
+```bash
+pip install yoga
+```
+
+Or from source:
+```bash
+git clone https://github.com/darshjme/yoga.git
+cd yoga && pip install -e .
 ```
 
 ## Quick Start
 
 ```python
-from plugin import *
+from yoga import *
 
-# Initialize
-# See examples/ for full usage patterns
+# See examples/ for full usage
 ```
 
-## Why `agent-plugin`?
-
-Production LLM systems fail in predictable ways. `agent-plugin` solves the **plugin** failure mode with:
-
-- **Zero dependencies** — no version conflicts, no bloat
-- **Battle-tested patterns** — extracted from real production systems
-- **Type-safe** — full type hints, mypy-compatible
-- **Minimal surface area** — one job, done well
-- **Composable** — works with any LLM framework (LangChain, LlamaIndex, raw OpenAI, etc.)
+---
 
 ## The Vedic Arsenal
 
-`agent-plugin` is part of **[darshjme/arsenal](https://github.com/darshjme/arsenal)** — a collection of 100 focused Python libraries for LLM agent infrastructure.
+`yoga` is one of 100 libraries in **[darshjme/arsenal](https://github.com/darshjme/arsenal)** — each named from sacred Indian literature:
 
-Each library solves exactly one problem. Together they form a complete stack.
+| Sanskrit Name | Source | Technical Function |
+|---|---|---|
+| `yoga` | Bhagavad Gita — four Yogas | Union — the joining of components |
 
-```
-pip install agent-plugin  # this library
-# Browse all 100: https://github.com/darshjme/arsenal
-```
+Each library solves one problem. Zero external dependencies. Pure Python 3.8+.
+
+---
 
 ## Contributing
 
-Found a bug? Have an improvement?
-
 1. Fork the repo
-2. Create a feature branch (`git checkout -b fix/your-fix`)
-3. Add tests
+2. Create feature branch (`git checkout -b fix/your-fix`)  
+3. Add tests — zero dependencies only
 4. Open a PR
-
-All contributions welcome. Keep it zero-dependency.
-
-## License
-
-MIT — use freely, build freely.
 
 ---
 
 <div align="center">
 
-**Built with 🌊 by [Darshankumar Joshi](https://github.com/darshjme)** · [@thedarshanjoshi](https://twitter.com/thedarshanjoshi)
+**⚡ Built by [Darshankumar Joshi](https://github.com/darshjme)** · [@thedarshanjoshi](https://twitter.com/thedarshanjoshi)
 
 *"कर्मण्येवाधिकारस्ते मा फलेषु कदाचन"*
-*Your right is to action alone, never to the fruits thereof.*
+*Your right is to action alone, never to its fruits. — Bhagavad Gita 2.47*
 
-[Arsenal](https://github.com/darshjme/arsenal) · [GitHub](https://github.com/darshjme) · [Twitter](https://twitter.com/thedarshanjoshi)
+[Vedic Arsenal](https://github.com/darshjme/arsenal) · [GitHub](https://github.com/darshjme) · [Twitter](https://twitter.com/thedarshanjoshi)
 
 </div>
